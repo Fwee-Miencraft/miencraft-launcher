@@ -1,0 +1,19 @@
+# GitHub Actions YAML to send notifications to Discord
+name: Discord Notification
+on: [push, pull_request]
+
+jobs:
+  discord-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Message
+        uses: appleboy/discord-action@master
+        with:
+          webhook_id: ${{ secrets.DISCORD_ID }}
+          webhook_token: ${{ secrets.DISCORD_TOKEN }}
+          message: |
+            ## **🚀 New Activity in ${{ github.repository }}**:
+            ${{ github.actor }} **pushed a commit into** ${{ github.ref_name }}!
+            **Commit** *${{ github.event.head_commit.id }}*: ${{ github.event.head_commit.message }}
+            View changes at ${{ github.event.compare }}.
+           
