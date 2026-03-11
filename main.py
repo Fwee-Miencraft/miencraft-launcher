@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel
 from PyQt5.QtGui import QIcon
 
 class MainWindow(QMainWindow):
@@ -8,6 +8,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("miencraft launcher")
         self.setGeometry(0,0,1800,800)
         self.setWindowIcon(QIcon("assets/GrassBlock.png"))
+        self.text = "Welcome to the miencraft launcher v0.1!"
+        label = QLabel(self.text, self)
         
 
 def main():
