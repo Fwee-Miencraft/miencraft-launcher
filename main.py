@@ -1,8 +1,14 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout, QPushButton
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QLabel, QWidget,
+    QVBoxLayout, QHBoxLayout, QPushButton
+)
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt
 
+def setbuttoncolor(button:QPushButton, button_color_hex:str):
+    #A function to help with setting background color of a Button.
+    button.setStyleSheet(f"background-color: {button_color_hex};")
 
 class MainWindow(QMainWindow):
 
@@ -11,36 +17,54 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("miencraft launcher")
         self.setWindowIcon(QIcon("assets/GrassBlock.png"))
+        self.setStyleSheet("background-color:#91d991")
 
-        # Central widget (required for layouts in QMainWindow)
         central = QWidget()
         self.setCentralWidget(central)
 
-        layout = QVBoxLayout()
+        main_layout = QVBoxLayout()
+        main_layout.setSpacing(25)
 
-        # Title label
+        # title
         label = QLabel("Welcome to the miencraft launcher v0.1!")
-        label.setFont(QFont("Comic Sans MS", 20))
+        label.setFont(QFont("Comic Sans MS", 24))
         label.setAlignment(Qt.AlignCenter)
-
-        label.setStyleSheet("""
-            color: #91d991;
-            background-color: #0f800f;
-            padding: 10px;
-        """)
 
         # Buttons
         play_button = QPushButton("Play")
         settings_button = QPushButton("Settings")
         quit_button = QPushButton("Quit")
 
-        # Add widgets to layout
-        layout.addWidget(label)
-        layout.addWidget(play_button)
-        layout.addWidget(settings_button)
-        layout.addWidget(quit_button)
+        # set background color of button using the set_button_color function
+        setbuttoncolor(play_button, "#5c945c")
+        setbuttoncolor(settings_button, "#5c945c")
+        setbuttoncolor(quit_button, "#5c945c")
 
-        central.setLayout(layout)
+        #Make buttons bigger
+        play_button.setMinimumHeight(60)
+        settings_button.setMinimumHeight(50)
+        quit_button.setMinimumHeight(50)
+
+        play_button.setMinimumWidth(200)
+        settings_button.setMinimumWidth(150)
+        quit_button.setMinimumWidth(150)
+
+        bottom_layout = QHBoxLayout()
+        bottom_layout.setSpacing(20)
+
+        bottom_layout.addStretch()
+        bottom_layout.addWidget(settings_button)
+        bottom_layout.addWidget(quit_button)
+        bottom_layout.addStretch()
+
+        # Center everything
+        main_layout.addStretch()
+        main_layout.addWidget(label, alignment=Qt.AlignCenter)
+        main_layout.addWidget(play_button, alignment=Qt.AlignCenter)
+        main_layout.addLayout(bottom_layout)
+        main_layout.addStretch()
+
+        central.setLayout(main_layout)
 
 
 def main():
@@ -52,5 +76,5 @@ def main():
     sys.exit(app.exec_())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
