@@ -45,7 +45,7 @@ app.geometry(f"1000x600+{x}+{y}")
 # ---- TITLE ----
 title = ctk.CTkLabel(
     app,
-    text="Minecraft",
+    text="Miencraft Launcher",
     font=("Georgia", 48, "bold")
 )
 title.pack(pady=60)
@@ -60,7 +60,7 @@ def launch():
 launch_button = ctk.CTkButton(
     button_frame,
     text="Launch Game",
-    font=("Segoe UI", 22, "bold"),
+    font=("Courier New", 22, "bold"),
     width=350,
     height=70,
     command=launch
@@ -70,7 +70,7 @@ launch_button.pack(pady=20)
 quit_button = ctk.CTkButton(
     button_frame,
     text="Quit",
-    font=("Segoe UI", 22, "bold"),
+    font=("Courier New", 22, "bold"),
     width=350,
     height=70,
     fg_color="#2f2f2f",
