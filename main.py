@@ -1,80 +1,69 @@
+import customtkinter as ctk
+import subprocess
 import sys
-from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QLabel, QWidget,
-    QVBoxLayout, QHBoxLayout, QPushButton
+
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("dark-blue")
+
+app = ctk.CTk()
+app.title("Miencraft Launcher")
+app.geometry("1000x600")
+app.resizable(True, True)
+
+# Center window
+screen_width = app.winfo_screenwidth()
+screen_height = app.winfo_screenheight()
+x = (screen_width // 2) - 500
+y = (screen_height // 2) - 300
+app.geometry(f"1000x600+{x}+{y}")
+
+# ---- TITLE ----
+title = ctk.CTkLabel(
+    app,
+    text="Miencraft",
+    font=("Georgia", 48, "bold")
 )
-from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt
+title.pack(pady=60)
 
-def setbuttoncolor(button:QPushButton, button_color_hex:str):
-    #A function to help with setting background color of a Button.
-    button.setStyleSheet(f"background-color: {button_color_hex};")
+# ---- BUTTON FRAME ----
+button_frame = ctk.CTkFrame(app, fg_color="transparent")
+button_frame.pack(pady=20)
 
-class MainWindow(QMainWindow):
+def quit():
+    sys.exit()
 
-    def __init__(self):
-        super().__init__()
+def launch():
+    #subprocess.Popen(["game/miencraft.exe"])
+    print("no game")
 
-        self.setWindowTitle("miencraft launcher")
-        self.setWindowIcon(QIcon("assets/GrassBlock.png"))
-        self.setStyleSheet("background-color:#91d991")
+launch_button = ctk.CTkButton(
+    button_frame,
+    text="Launch Game",
+    font=("Segoe UI", 22, "bold"),
+    width=350,
+    height=70,
+    command=launch
+)
+launch_button.pack(pady=20)
 
-        central = QWidget()
-        self.setCentralWidget(central)
+quit_button = ctk.CTkButton(
+    button_frame,
+    text="Quit",
+    font=("Segoe UI", 22, "bold"),
+    width=350,
+    height=70,
+    fg_color="#2f2f2f",
+    hover_color="#3a3a3a",
+    command=quit
+)
+quit_button.pack(pady=20)
 
-        main_layout = QVBoxLayout()
-        main_layout.setSpacing(25)
+# ---- VERSION LABEL ----
+version = ctk.CTkLabel(
+    app,
+    text="Miencraft Launcher, v0.1",
+    font=("Segoe UI", 14)
+)
+version.place(relx=0.98, rely=0.97, anchor="se")
 
-        # title
-        label = QLabel("Welcome to the miencraft launcher v0.1!")
-        label.setFont(QFont("Comic Sans MS", 24))
-        label.setAlignment(Qt.AlignCenter)
-
-        # Buttons
-        play_button = QPushButton("Play")
-        settings_button = QPushButton("Settings")
-        quit_button = QPushButton("Quit")
-
-        # set background color of button using the set_button_color function
-        setbuttoncolor(play_button, "#5c945c")
-        setbuttoncolor(settings_button, "#5c945c")
-        setbuttoncolor(quit_button, "#5c945c")
-
-        #Make buttons bigger
-        play_button.setMinimumHeight(60)
-        settings_button.setMinimumHeight(50)
-        quit_button.setMinimumHeight(50)
-
-        play_button.setMinimumWidth(200)
-        settings_button.setMinimumWidth(150)
-        quit_button.setMinimumWidth(150)
-
-        bottom_layout = QHBoxLayout()
-        bottom_layout.setSpacing(20)
-
-        bottom_layout.addStretch()
-        bottom_layout.addWidget(settings_button)
-        bottom_layout.addWidget(quit_button)
-        bottom_layout.addStretch()
-
-        # Center everything
-        main_layout.addStretch()
-        main_layout.addWidget(label, alignment=Qt.AlignCenter)
-        main_layout.addWidget(play_button, alignment=Qt.AlignCenter)
-        main_layout.addLayout(bottom_layout)
-        main_layout.addStretch()
-
-        central.setLayout(main_layout)
-
-
-def main():
-    app = QApplication(sys.argv)
-
-    window = MainWindow()
-    window.showMaximized()
-
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    main()
+app.mainloop()
