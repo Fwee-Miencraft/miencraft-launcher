@@ -3,3 +3,4 @@ desktop.ini
 venv
 .venv
 miencraft-game
+__pycache__
