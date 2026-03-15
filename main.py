@@ -23,11 +23,14 @@ def get_local_version():
 
 def get_online_version():
     try:
-        r = requests.get(ONLINE_VERSION_URL)
-    except ssl.SSLCertVerificationError:
+        r = requests.get(ONLINE_VERSION_URL, timeout=5)
+        r.raise_for_status()
+        data = r.json()
+        return data["version"]
 
-    data = r.json()
-    return data["version"]
+    except requests.exceptions.RequestException:
+        print("No internet connection or update server unreachable.")
+        return None
 
 def download_update():
     url = "https://github.com/Fwee-Miencraft/miencraft/releases/download/v0.0.1-alpha/miencraft-win.zip"
@@ -57,14 +60,15 @@ def check_for_updates():
     local = get_local_version()
     online = get_online_version()
 
-    print("Local version:", local)
-    print("Online version:", online)
+    if online is None:
+        print("Skipping update check (offline).")
+        return
 
     if local != online:
-        print("Update required")
+        print("Update available!")
         download_update()
     else:
-        print("Game is up to date")
+        print("Game is up to date.")
 
 
 def install_update(zip_data):
