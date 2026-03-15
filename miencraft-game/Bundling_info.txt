@@ -1,0 +1,20 @@
+#We are using clang, not GNU
+
+# Command for Mac
+clang++ -std=c++17 main.cpp -o main \  
+    -F/Library/Frameworks \
+    -framework SDL3 -framework SDL3_image \
+    -framework OpenGL \
+    -framework Cocoa -framework Metal -framework QuartzCore \
+    -rpath /Library/Frameworks
+
+Windows
+g++ -O2 -std=c++17 main.cpp glad/src/glad.cpp -o main.exe `
+-I"glad/include" `
+-I"." `
+-I"C:\SDL\x86_64-w64-mingw32\include" `
+-I"C:\SDL_image\x86_64-w64-mingw32\include" `
+-L"C:\SDL\x86_64-w64-mingw32\lib" `
+-L"C:\SDL_image\x86_64-w64-mingw32\lib" `
+-lSDL3 -lSDL3_image -lopengl32 `
+-static-libgcc -static-libstdc++
