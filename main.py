@@ -6,12 +6,6 @@ LOCAL_VERSION_FILE = "version.json"
 ONLINE_VERSION_URL = "https://raw.githubusercontent.com/Fwee-Miencraft/miencraft/main/version.json"
 # Make sure not the change the version.json until release is ready
 
-def check_connection(url='http://www.google.com/', timeout=5):
-    try:
-        _ = requests.get(url, timeout=timeout)
-        return True
-    except requests.ConnectionError:
-        return False
 
 def get_local_version():
     if not os.path.exists(LOCAL_VERSION_FILE):
