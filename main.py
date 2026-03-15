@@ -1,13 +1,77 @@
 import customtkinter as ctk
 from PIL import Image, ImageTk
-import sys
-import os
-import requests
-import platform
-import zipfile
-import io
-import subprocess
-import shutil
+import sys, os, requests, platform, zipfile, io, subprocess, shutil, json
+
+LOCAL_VERSION_FILE = "version.json"
+ONLINE_VERSION_URL = "https://raw.githubusercontent.com/Fwee-Miencraft/miencraft/main/version.json"
+# Make sure not the change the version.json until release is ready
+
+def check_connection(url='http://www.google.com/', timeout=5):
+    try:
+        _ = requests.get(url, timeout=timeout)
+        return True
+    except requests.ConnectionError:
+        return False
+
+def get_local_version():
+    if not os.path.exists(LOCAL_VERSION_FILE):
+        return None
+
+    with open(LOCAL_VERSION_FILE, "r") as f:
+        data = json.load(f)
+        return data["version"]
+
+def get_online_version():
+    try:
+        r = requests.get(ONLINE_VERSION_URL)
+    except ssl.SSLCertVerificationError:
+
+    data = r.json()
+    return data["version"]
+
+def download_update():
+    url = "https://github.com/Fwee-Miencraft/miencraft/releases/download/v0.0.1-alpha/miencraft-win.zip"
+
+    print("Downloading update...")
+    r = requests.get(url)
+    r.raise_for_status()
+
+    # remove old game
+    if os.path.exists("miencraft-game"):
+        shutil.rmtree("miencraft-game")
+
+    print("Installing update...")
+    with zipfile.ZipFile(io.BytesIO(r.content)) as z:
+        z.extractall("miencraft-game")
+
+    print("Update complete")
+
+    # Update local version.json
+    online_version = get_online_version()  # get the version from online
+    with open(LOCAL_VERSION_FILE, "w") as f:
+        json.dump({"version": online_version}, f)
+    print(f"Local version updated to {online_version}")
+    print("Update complete")
+#check for updates:
+def check_for_updates():
+    local = get_local_version()
+    online = get_online_version()
+
+    print("Local version:", local)
+    print("Online version:", online)
+
+    if local != online:
+        print("Update required")
+        download_update()
+    else:
+        print("Game is up to date")
+
+
+def install_update(zip_data):
+    if os.path.exists("miencraft-game"):
+        shutil.rmtree("miencraft-game")
+    with zipfile.ZipFile(io.BytesIO(zip_data)) as z:
+        z.extractall("miencraft-game")
 
 # --- INITIAL SETUP ---
 ctk.set_appearance_mode("dark")
@@ -16,9 +80,7 @@ ctk.set_default_color_theme("dark-blue")
 app = ctk.CTk()
 app.title("Miencraft Launcher")
 app.geometry("1000x600")
-app.attributes("-topmost", True)
-app.after(500, lambda: app.attributes("-topmost", False))
-app.after(100, lambda: (app.lift(), app.focus_force()))
+app.after(100, check_for_updates)
 
 # ---- SYSTEM DETECTION ----
 system_type = platform.system()
@@ -56,35 +118,6 @@ title.pack(pady=60)
 
 # --- HELPERS ---
 
-def download_and_extract_repo():
-    url = "https://github.com/Fwee-Miencraft/miencraft/archive/refs/heads/main.zip"
-    extract_dir = "miencraft-game"  # clean name
-
-    print("Downloading repository ZIP...")
-    r = requests.get(url, stream=True)
-    r.raise_for_status()
-
-    # Clear old folder if exists
-    if os.path.exists(extract_dir):
-        shutil.rmtree(extract_dir)
-
-    with zipfile.ZipFile(io.BytesIO(r.content)) as z:
-        # Extract directly, strip top-level folder if needed
-        for member in z.namelist():
-            filename = member
-            # Remove the top-level "miencraft-main/" prefix
-            if filename.startswith("miencraft-main/"):
-                filename = filename[len("miencraft-main/"):]
-            target_path = os.path.join(extract_dir, filename)
-            os.makedirs(os.path.dirname(target_path), exist_ok=True)
-            if not member.endswith('/'):
-                z.extract(member, extract_dir)
-                # Rename extracted file to correct path
-                old_path = os.path.join(extract_dir, member)
-                if os.path.exists(old_path):
-                    shutil.move(old_path, target_path)
-
-    print(f"Game extracted to: {os.path.abspath(extract_dir)}")
 
 def launch_game():
     game_folder = "miencraft-game"
@@ -98,6 +131,7 @@ def launch_game():
         return
 
     if system_type == "Darwin":
+        full_game_folder = os.path.join(full_game_folder, "miencraft-mac")
         executable = os.path.join(full_game_folder, "main")
         if not os.path.exists(executable):
             print(f"Executable not found: {executable}")
@@ -113,13 +147,14 @@ def launch_game():
             subprocess.Popen([executable], cwd=full_game_folder)
         except Exception as e:
             print(f"Launch failed: {e}")
-    else:
+    if system_type == "Windows":
+        full_game_folder = os.path.join(full_game_folder, "miencraft-win")
         executable = os.path.join(full_game_folder, "main.exe")
         if not os.path.exists(executable):
             print(f"Executable not found: {executable}")
             return
         print(f"Launching: {executable}")
-        subprocess.Popen(executable, cwd=full_game_folder)
+        subprocess.Popen([executable])
 
 # --- BUTTON FRAME ---
 button_frame = ctk.CTkFrame(app, fg_color="transparent")
@@ -127,7 +162,6 @@ button_frame.pack(pady=20)
 
 def launch():
     print("Launch button pressed")
-    download_and_extract_repo()
     launch_game()
 
 launch_button = ctk.CTkButton(
@@ -159,5 +193,7 @@ version = ctk.CTkLabel(
     font=("Segoe UI", 14)
 )
 version.place(relx=0.98, rely=0.97, anchor="se")
-
-app.mainloop()
+try:
+    app.mainloop()
+except KeyboardInterrupt:
+    sys.exit()
