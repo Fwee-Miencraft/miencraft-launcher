@@ -10,6 +10,9 @@ ctk.set_default_color_theme("dark-blue")
 app = ctk.CTk()
 app.title("Minecraft Launcher")
 app.geometry("1000x600")
+app.attributes("-topmost", True)
+app.after(500, lambda: app.attributes("-topmost", False))
+app.after(100, lambda: (app.lift(), app.focus_force()))
 
 # --- CROSS-PLATFORM ICON LOGIC ---
 def set_icon():
