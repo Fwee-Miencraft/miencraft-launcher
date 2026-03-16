@@ -1,13 +1,11 @@
 import customtkinter as ctk #type:ignore
 from PIL import Image, ImageTk
 from updater import Updater
-import sys, os, platform, subprocess
+import sys, os, platform, subprocess, threading
+from tkinter import messagebox
 
-
-
-# Make da updater Object
+# Make the updater Object
 updater = Updater()
-
 
 # --- INITIAL SETUP ---
 ctk.set_appearance_mode("dark")
@@ -16,9 +14,6 @@ ctk.set_default_color_theme("dark-blue")
 app = ctk.CTk()
 app.title("Miencraft Launcher")
 app.geometry("1000x600")
-
-# Run update check shortly after launcher starts
-app.after(100, updater.check_for_updates)
 
 # ---- SYSTEM DETECTION ----
 system_type = platform.system()
@@ -30,6 +25,53 @@ screen_height = app.winfo_screenheight()
 x = (screen_width // 2) - 500
 y = (screen_height // 2) - 300
 app.geometry(f"1000x600+{x}+{y}")
+
+# --- UI ELEMENTS FOR UPDATER ---
+# These are hidden by default and shown during download
+progress_label = ctk.CTkLabel(app, text="Checking for updates...", font=("Segoe UI", 14))
+progress_label.pack(pady=(10, 0))
+
+progress_bar = ctk.CTkProgressBar(app, width=400)
+progress_bar.set(0)
+progress_bar.pack(pady=10)
+
+# --- UPDATER LOGIC ---
+def update_progress_ui(value):
+    """Callback function to update the progress bar from the thread"""
+    progress_bar.set(value)
+    percentage = int(value * 100)
+    progress_label.configure(text=f"Downloading Update: {percentage}%")
+
+def run_update_check():
+    """Background task to handle updates without freezing the UI"""
+    online_version = updater.get_online_version()
+    
+    if online_version is None:
+        # 1. Show warning popup when no wifi/server down
+        messagebox.showwarning("Connection Error", "Could not reach update server. Starting in offline mode.")
+        progress_label.pack_forget()
+        progress_bar.pack_forget()
+        return
+
+    local_version = updater.get_local_version()
+    
+    if local_version != online_version:
+        # 2. Show progress bar and download
+        try:
+            updater.download_update(progress_callback=update_progress_ui)
+            progress_label.configure(text="Update Successful!")
+            # Hide progress bar after 3 seconds
+            app.after(3000, lambda: [progress_bar.pack_forget(), progress_label.pack_forget()])
+        except Exception as e:
+            messagebox.showerror("Update Failed", f"An error occurred: {e}")
+    else:
+        # Already up to date, hide the bars
+        progress_label.pack_forget()
+        progress_bar.pack_forget()
+
+# Start update check in a separate thread
+update_thread = threading.Thread(target=run_update_check, daemon=True)
+app.after(100, update_thread.start)
 
 # --- ICON ---
 def set_icon():
@@ -55,51 +97,31 @@ title = ctk.CTkLabel(
 title.pack(pady=60)
 
 # --- GAME LAUNCHER ---
-
 def launch_game():
     game_folder = "miencraft-game"
-
     base_dir = os.path.abspath(os.path.dirname(__file__))
     full_game_folder = os.path.join(base_dir, game_folder)
 
     if not os.path.exists(full_game_folder):
-        print(f"Game folder not found: {full_game_folder}")
+        messagebox.showerror("Error", "Game files not found. Please connect to internet to download.")
         return
 
     if system_type == "Darwin":
-        full_game_folder = os.path.join(full_game_folder, "miencraft-mac")
-        executable = os.path.join(full_game_folder, "main")
-
-        if not os.path.exists(executable):
-            print(f"Executable not found: {executable}")
-            return
-
-        try:
+        path_to_game = os.path.join(full_game_folder, "miencraft-mac")
+        executable = os.path.join(path_to_game, "main")
+        if os.path.exists(executable):
             os.chmod(executable, 0o755)
-            print(f"Launching: {executable}")
-            subprocess.Popen([executable], cwd=full_game_folder)
-        except Exception as e:
-            print(f"Launch failed: {e}")
+            subprocess.Popen([executable], cwd=path_to_game)
 
-    if system_type == "Windows":
-        full_game_folder = os.path.join(full_game_folder, "miencraft-win")
-        executable = os.path.join(full_game_folder, "main.exe")
-
-        if not os.path.exists(executable):
-            print(f"Executable not found: {executable}")
-            return
-
-        print(f"Launching: {executable}")
-        subprocess.Popen([executable])
-
+    elif system_type == "Windows":
+        path_to_game = os.path.join(full_game_folder, "miencraft-win")
+        executable = os.path.join(path_to_game, "main.exe")
+        if os.path.exists(executable):
+            subprocess.Popen([executable], cwd=path_to_game)
 
 # --- BUTTON FRAME ---
 button_frame = ctk.CTkFrame(app, fg_color="transparent")
 button_frame.pack(pady=20)
-
-def launch():
-    print("Launch button pressed")
-    launch_game()
 
 launch_button = ctk.CTkButton(
     button_frame,
@@ -107,7 +129,7 @@ launch_button = ctk.CTkButton(
     font=("Courier New", 22, "bold"),
     width=350,
     height=70,
-    command=launch
+    command=launch_game
 )
 launch_button.pack(pady=20)
 
@@ -124,12 +146,12 @@ quit_button = ctk.CTkButton(
 quit_button.pack(pady=20)
 
 # --- VERSION LABEL ---
-version = ctk.CTkLabel(
+version_lbl = ctk.CTkLabel(
     app,
     text="Miencraft Launcher • v0.1",
     font=("Segoe UI", 14)
 )
-version.place(relx=0.98, rely=0.97, anchor="se")
+version_lbl.place(relx=0.98, rely=0.97, anchor="se")
 
 try:
     app.mainloop()
