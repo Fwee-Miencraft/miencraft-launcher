@@ -25,6 +25,7 @@ screen_height = app.winfo_screenheight()
 x = (screen_width // 2) - 500
 y = (screen_height // 2) - 300
 app.geometry(f"1000x600+{x}+{y}")
+app.focus_force()
 
 # --- UI ELEMENTS FOR UPDATER ---
 # These are hidden by default and shown during download
