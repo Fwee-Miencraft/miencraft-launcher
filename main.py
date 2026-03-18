@@ -103,15 +103,48 @@ def launch_game():
     full_game_folder = os.path.join(base_dir, game_folder)
 
     if not os.path.exists(full_game_folder):
-        messagebox.showerror("Error", "Game files not found. Please connect to internet to download.")
+        messagebox.showerror("Error", "Game files not found. Please connect to internet to download. Will try to download again.")
+        # Try to reinstall The Exacutable if it was deleted by someone like me...
+        try:
+            updater.download_update(progress_callback=update_progress_ui)
+        except Exception as e:
+            print(f"Error: {e}")
+        launch_game()
         return
 
     if system_type == "Darwin":
-        path_to_game = os.path.join(full_game_folder, "miencraft-mac")
-        executable = os.path.join(path_to_game, "main")
+        # Look for Miencraft.app bundle inside the extracted folder
+        app_bundle_name = "Miencraft.app"  # case-sensitive — adjust if different
+        executable_path = os.path.join(full_game_folder, app_bundle_name)
+
+        if not os.path.exists(executable_path):
+            other_exacutable_path = os.path.join(full_game_folder, "miencraft-mac", app_bundle_name)
+            if os.path.exists(other_exacutable_path):
+                executable_path = other_exacutable_path
+            else:
+                messagebox.showerror("Launch Error", 
+                    "Miencraft.app bundle not found in miencraft-game.\n"
+                    "Expected: miencraft-game/Miencraft.app or miencraft-game/miencraft-mac/Miencraft.app"
+                )
+                return
+
+        executable = os.path.join(
+            executable_path,
+            "Contents",
+            "MacOS",
+            "Miencraft"
+        )
+        executable_path = os.path.join(
+            executable_path,
+            "Contents",
+            "Macos"
+        )
+
         if os.path.exists(executable):
             os.chmod(executable, 0o755)
-            subprocess.Popen([executable], cwd=path_to_game)
+            subprocess.Popen([executable], cwd=executable_path)
+        else:
+            print(f"Exacutable not found: {executable}")
 
     elif system_type == "Windows":
         path_to_game = os.path.join(full_game_folder, "miencraft-win")

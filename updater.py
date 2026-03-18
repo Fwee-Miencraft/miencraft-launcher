@@ -1,10 +1,11 @@
-import shutil, json, os, requests, zipfile, io
+import shutil, json, os, requests, zipfile, io, platform
 
 class Updater:
     def __init__(self):
         self.local_version_file = "version.json"
         self.online_version_url = "https://raw.githubusercontent.com/Fwee-Miencraft/miencraft/main/version.json"
         self.download_url = "https://github.com/Fwee-Miencraft/miencraft/releases/download/v0.0.1-alpha/miencraft-win.zip"
+        self.download_url_mac = "https://github.com/Fwee-Miencraft/miencraft/releases/download/v0.0.1-alpha/miencraft-mac.zip"
         self.game_folder = "miencraft-game"
 
     def get_local_version(self):
@@ -27,7 +28,12 @@ class Updater:
 
     def download_update(self, progress_callback=None):
         # We use stream=True so we can read the file in chunks
-        r = requests.get(self.download_url, stream=True)
+        if (platform.system() == "Darwin"):
+            r = requests.get(self.download_url_mac, stream=True)
+        elif (platform.system() == "Windows"):
+            r = requests.get(self.download_url, stream=True)
+        else:
+            raise ValueError(f"Unsupported OS: {platform.system()}")
         r.raise_for_status()
 
         total_size = int(r.headers.get('content-length', 0))
